@@ -16,3 +16,15 @@ jobs:
 
       - name: Check HTML
         run: tidy -qe index.html
+        
+      - name: Test HTML content
+        run: grep -q "Hello" index.html
+
+      # - name: Build no need for html
+      #   run: npm run build
+
+      # - name: Deploy to server
+      #   run: scp -r ./dist user@server:/var/www/html
+
+      # - name: Check homepage after deploy
+      #   run: curl -I https://yourserver.com | grep "200 OK"
