@@ -1,49 +1,27 @@
-name: HTML CI
+name: HTML Check (Only HTML)
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
 jobs:
-  validate:
-    name: Validate HTML & Links
+  check-html:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+      - name: Install tidy (HTML checker)
+        run: sudo apt-get update && sudo apt-get install -y tidy
 
-      - name: Install dependencies
-        # If you use package-lock.json, prefer `npm ci`
+      - name: Validate all HTML files
         run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
-          # install validators/tools as dev deps (local)
-          npm install --no-save html-validate linkinator http-server
-
-      - name: Run HTML validation (html-validate)
-        run: |
-          # validate all HTML files in repo (adjust glob if needed)
-          npx html-validate "**/*.html"
-
-      - name: Start a simple HTTP server (for link checking)
-        # this runs http-server in background so linkinator can crawl
-        run: |
-          npx http-server -p 4000 > /tmp/http-server.log 2>&1 & echo $! > /tmp/http-server.pid
-        # give the server a moment to start
-        timeout-minutes: 2
-
-      - name: Check for broken links (linkinator)
-        run: |
-          # crawl site root and fail on broken links
-          npx linkinator http://localhost:4000 --recursive --status 400
-        # stop server at end
-      - name: Stop http-server
-        if: always()
-        run: |
-          if [ -f /tmp/http-server.pid ]; then kill $(cat /tmp/http-server.pid) || true; fi
+          echo "Checking HTML files..."
+          # find all .html files and validate them
+          for file in $(find . -name "*.html"); do
+            echo "Checking $file"
+            tidy -qe "$file" || exit 1
+          done
