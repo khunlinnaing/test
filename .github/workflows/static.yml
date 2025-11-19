@@ -1,4 +1,3 @@
-
 name: Simple HTML Check + Deploy to EC2
 
 on:
@@ -6,25 +5,23 @@ on:
     branches: [ "main" ]
 
 jobs:
-  check:
+  html-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout repository code
       - name: Checkout code
         uses: actions/checkout@v4
 
       # 2️⃣ Install tidy for HTML validation
       - name: Install tidy
-        run: sudo apt-get update && sudo apt-get install -y tidy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tidy
 
-      # 3️⃣ Check HTML syntax
-      - name: Check HTML
+      # 3️⃣ Validate HTML syntax
+      - name: Validate HTML
         run: tidy -qe index.html
-        
-    
-      - name: Check EC2 Host
-        run: echo "EC2 Host is: ${{ secrets.EC2_HOST }}. EC2 user is ${{ secrets.EC2_USER }}"
 
       # 4️⃣ Test HTML content
       - name: Test HTML content
@@ -40,25 +37,32 @@ jobs:
       - name: Build step
         run: echo "Build skipped for HTML"
 
-      # 6️⃣ Deploy to AWS EC2
+      # 6️⃣ Debug: Check EC2 secrets
+      - name: Debug EC2 secrets
+        run: |
+          echo "EC2 Host: ${{ secrets.EC2_HOST }}"
+          echo "EC2 User: ${{ secrets.EC2_USER }}"
+          echo "🔒 Private key is hidden for security"
+
+      # 7️⃣ Deploy to AWS EC2 via SCP
       - name: Deploy to AWS EC2
         uses: appleboy/scp-action@v0.1.2
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "./*"
-          target: "/var/www/html/"
-          debug: true
+          source: "./*"                  # deploy all files in repo
+          target: "/var/www/html/"        # server folder
+          debug: true                     # verbose logs for SSH issues
 
-      # 7️⃣ Check homepage after deploy (HTTPS or HTTP)
-      - name: Check homepage after deploy
+      # 8️⃣ Verify homepage after deploy
+      - name: Check homepage
         run: |
-          # Use https if your server has SSL certificate, otherwise http
+          # Use https if SSL is enabled, otherwise http
           URL="http://${{ secrets.EC2_HOST }}"
           STATUS=$(curl -o /dev/null -s -w "%{http_code}" $URL)
           if [ "$STATUS" -eq 200 ]; then
-            echo "✔ Homepage is OK"
+            echo "✔ Homepage is reachable"
           else
             echo "❌ Homepage check failed! Status code: $STATUS"
             exit 1
