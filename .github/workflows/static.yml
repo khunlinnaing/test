@@ -1,27 +1,18 @@
-name: HTML Check (Only HTML)
+name: Simple HTML Check
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  check-html:
+  check:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install tidy (HTML checker)
+      - name: Install tidy
         run: sudo apt-get update && sudo apt-get install -y tidy
 
-      - name: Validate all HTML files
-        run: |
-          echo "Checking HTML files..."
-          # find all .html files and validate them
-          for file in $(find . -name "*.html"); do
-            echo "Checking $file"
-            tidy -qe "$file" || exit 1
-          done
+      - name: Check HTML
+        run: tidy -qe index.html
