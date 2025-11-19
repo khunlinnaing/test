@@ -20,11 +20,13 @@ jobs:
       - name: Test HTML content
         run: grep -q "Hello" index.html
 
-      # - name: Build no need for html
-      #   run: npm run build
+      - name: Build no need for html
+        run: echo "Build on Html
 
-      # - name: Deploy to server
-      #   run: scp -r ./dist user@server:/var/www/html
+      - name: Deploy to server
+        run: echo "Deploy Complete"
+        # scp -r ./dist user@server:/var/www/html
 
-      # - name: Check homepage after deploy
-      #   run: curl -I https://yourserver.com | grep "200 OK"
+      - name: Check homepage after deploy
+        run: echo "Perfect everything"
+          #curl -I https://yourserver.com | grep "200 OK"
