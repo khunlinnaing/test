@@ -1,3 +1,4 @@
+
 name: Simple HTML Check + Deploy to EC2
 
 on:
@@ -20,6 +21,10 @@ jobs:
       # 3️⃣ Check HTML syntax
       - name: Check HTML
         run: tidy -qe index.html
+        
+    
+      - name: Check EC2 Host
+        run: echo "EC2 Host is: ${{ secrets.EC2_HOST }}. EC2 user is ${{ secrets.EC2_USER }}"
 
       # 4️⃣ Test HTML content
       - name: Test HTML content
