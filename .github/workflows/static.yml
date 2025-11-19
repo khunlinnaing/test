@@ -7,22 +7,35 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Install tidy for HTML validation
       - name: Install tidy
         run: sudo apt-get update && sudo apt-get install -y tidy
 
+      # 3️⃣ Check HTML syntax
       - name: Check HTML
         run: tidy -qe index.html
 
+      # 4️⃣ Test HTML content
       - name: Test HTML content
-        run: grep -q "Hello" index.html
+        run: |
+          if grep -q "Hello" index.html; then
+            echo "✔ HTML content test passed"
+          else
+            echo "❌ HTML content test failed!"
+            exit 1
+          fi
 
-      - name: Build (HTML no build needed)
-        run: echo "Build step skipped for HTML"
+      # 5️⃣ Build step (skipped for HTML)
+      - name: Build step
+        run: echo "Build skipped for HTML"
 
+      # 6️⃣ Deploy to AWS EC2
       - name: Deploy to AWS EC2
         uses: appleboy/scp-action@v0.1.2
         with:
@@ -31,13 +44,17 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           source: "./*"
           target: "/var/www/html/"
+          debug: true
 
+      # 7️⃣ Check homepage after deploy (HTTPS or HTTP)
       - name: Check homepage after deploy
         run: |
-          STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://${{ secrets.EC2_HOST }})
+          # Use https if your server has SSL certificate, otherwise http
+          URL="http://${{ secrets.EC2_HOST }}"
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" $URL)
           if [ "$STATUS" -eq 200 ]; then
             echo "✔ Homepage is OK"
           else
-            echo "❌ Homepage check failed!"
+            echo "❌ Homepage check failed! Status code: $STATUS"
             exit 1
           fi
