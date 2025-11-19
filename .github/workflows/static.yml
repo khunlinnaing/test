@@ -1,4 +1,4 @@
-name: Simple HTML Check
+name: Simple HTML Check + Deploy to EC2
 
 on:
   push:
@@ -16,17 +16,28 @@ jobs:
 
       - name: Check HTML
         run: tidy -qe index.html
-        
+
       - name: Test HTML content
         run: grep -q "Hello" index.html
 
-      - name: Build no need for html
-        run: echo "Build on Html"
+      - name: Build (HTML no build needed)
+        run: echo "Build step skipped for HTML"
 
-      - name: Deploy to server
-        run: echo "Deploy Complete"
-        # scp -r ./dist user@server:/var/www/html
+      - name: Deploy to AWS EC2
+        uses: appleboy/scp-action@v0.1.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "./*"
+          target: "/var/www/html/"
 
       - name: Check homepage after deploy
-        run: echo "Perfect everything"
-          #curl -I https://yourserver.com | grep "200 OK"
+        run: |
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://${{ secrets.EC2_HOST }})
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✔ Homepage is OK"
+          else
+            echo "❌ Homepage check failed!"
+            exit 1
+          fi
