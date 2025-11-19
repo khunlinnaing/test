@@ -21,7 +21,7 @@ jobs:
         run: grep -q "Hello" index.html
 
       - name: Build no need for html
-        run: echo "Build on Html
+        run: echo "Build on Html"
 
       - name: Deploy to server
         run: echo "Deploy Complete"
